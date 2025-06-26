@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 import warnings
 import matplotlib.pyplot as plt
 import seaborn as sns
+import joblib
 warnings.filterwarnings('ignore')
 
 try:
@@ -116,8 +117,21 @@ if __name__ == '__main__':
     df = pd.read_csv('la_liga_features.csv', parse_dates=['date'])
     df = df.sort_values('date')
     
-    model, scaler, feature_cols, _, le = train_model(df.copy())
+    # Train the model and get all artifacts
+    print("Training model...")
+    model, scaler, feature_cols, feature_medians, le = train_model(df.copy())
     
+    # Save all artifacts to a single file
+    model_artifacts = {
+        'model': model,
+        'scaler': scaler,
+        'feature_cols': feature_cols,
+        'feature_medians': feature_medians,
+        'le': le
+    }
+    joblib.dump(model_artifacts, 'trained_model.joblib')
+    print("Model artifacts saved to 'trained_model.joblib'")
+
     # Optional: For script-based evaluation if needed
     from sklearn.model_selection import train_test_split
     from sklearn.metrics import accuracy_score, f1_score

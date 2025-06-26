@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 from PIL import Image
 import os
-from modeling import train_model, construct_feature_vector, get_head_to_head, get_team_form
+import joblib
+from modeling import construct_feature_vector, get_head_to_head, get_team_form
 import plotly.graph_objects as go
 import numpy as np
 
@@ -15,18 +16,25 @@ st.set_page_config(
 st.title("🔮 Match Predictions")
 
 @st.cache_data
-def load_data_and_model():
-    """Loads all necessary data, trains the model, and caches it."""
+def load_data_and_model_artifacts():
+    """Loads all necessary data and pre-trained model artifacts."""
     data = pd.read_csv("la_liga_features.csv", parse_dates=['date'])
-    model, scaler, feature_cols, feature_medians, le = train_model(data)
+    artifacts = joblib.load("trained_model.joblib")
+    
+    model = artifacts['model']
+    scaler = artifacts['scaler']
+    feature_cols = artifacts['feature_cols']
+    feature_medians = artifacts['feature_medians']
+    le = artifacts['le']
+    
     return data, model, scaler, feature_cols, feature_medians, le
 
 # --- Load Data and Model ---
 try:
-    data, model, scaler, feature_cols, feature_medians, le = load_data_and_model()
+    data, model, scaler, feature_cols, feature_medians, le = load_data_and_model_artifacts()
     teams = sorted(data["hometeam"].unique())
 except FileNotFoundError:
-    st.error("The `la_liga_features.csv` file was not found. Please run the `feature_engineering.py` script first.")
+    st.error("The `la_liga_features.csv` or `trained_model.joblib` file was not found. Please run the data preparation and model training scripts first.")
     st.stop()
 
 # --- UI Components ---
